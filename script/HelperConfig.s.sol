@@ -123,7 +123,6 @@ contract HelperConfig is CodeConstants, Script {
             link: address(link),
             account: FOUNDRY_DEFAULT_SENDER
         });
-        vm.deal(localNetworkConfig.account, 100 ether);
         return localNetworkConfig;
     }
 }
