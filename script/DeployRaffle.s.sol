@@ -10,34 +10,42 @@ contract DeployRaffle is Script {
     function run() external returns (Raffle, HelperConfig) {
         HelperConfig helperConfig = new HelperConfig(); // This comes with our mocks!
         AddConsumer addConsumer = new AddConsumer();
+
         HelperConfig.NetworkConfig memory config = helperConfig.getConfig();
 
         if (config.subscriptionId == 0) {
             CreateSubscription createSubscription = new CreateSubscription();
-            (config.subscriptionId, config.vrfCoordinatorV2_5) =
-                createSubscription.createSubscription(config.vrfCoordinatorV2_5, config.account);
+            (config.subscriptionId, config.vrfCoordinator) = createSubscription
+                .createSubscription(config.vrfCoordinator);
 
             FundSubscription fundSubscription = new FundSubscription();
             fundSubscription.fundSubscription(
-                config.vrfCoordinatorV2_5, config.subscriptionId, config.link, config.account
+                config.vrfCoordinator,
+                config.subscriptionId,
+                config.link,
+                config.account
             );
-
-            helperConfig.setConfig(block.chainid, config);
         }
 
         vm.startBroadcast(config.account);
         Raffle raffle = new Raffle(
             config.subscriptionId,
             config.gasLane,
-            config.automationUpdateInterval,
+            config.interval,
             config.raffleEntranceFee,
             config.callbackGasLimit,
-            config.vrfCoordinatorV2_5
+            config.vrfCoordinator
         );
         vm.stopBroadcast();
 
         // We already have a broadcast in here
-        addConsumer.addConsumer(address(raffle), config.vrfCoordinatorV2_5, config.subscriptionId, config.account);
+        AddConsumer addConsumer = new AddConsumer();
+        addConsumer.addConsumer(
+            address(raffle),
+            config.vrfCoordinator,
+            config.subscriptionId,
+            config.account
+        );
         return (raffle, helperConfig);
     }
 }
